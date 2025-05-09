@@ -19,6 +19,7 @@ fi
 ### Identify current OS
 OS_UBUNTU="Ubuntu"
 OS_FEDORA="Fedora"
+OS_ARCH="Arch Linux"
 
 source /etc/os-release
 echo $NAME
@@ -60,6 +61,32 @@ then
 	sudo cp -rvf mm_dmidecode.cil /opt/fcc_lenovo
 	sudo cp -rvf mm_sh.cil /opt/fcc_lenovo
 	sudo semodule -i /opt/fcc_lenovo/*.cil
+
+elif [[ "$NAME" == *"$OS_ARCH"* ]]
+then
+	### Copy fcc unlock script for MM
+	sudo tar -zxf fcc-unlock.d.tar.gz -C /usr/lib/ModemManager/
+	sudo chmod ugo+x /usr/lib/ModemManager/fcc-unlock.d/*
+
+	### Copy SAR config files
+	sudo tar -zxf sar_config_files.tar.gz -C /opt/fcc_lenovo/
+
+	### Copy libraries
+	sudo cp -rvf libmodemauth.so /opt/fcc_lenovo/lib/
+	sudo cp -rvf libconfigserviceR+.so /opt/fcc_lenovo/lib/
+	sudo cp -rvf libconfigservice350.so /opt/fcc_lenovo/lib/
+	sudo cp -rvf libmbimtools.so /opt/fcc_lenovo/lib/
+
+	### Copy and install SELinux policies if SELinux is installed
+	if command -v semodule &> /dev/null; then
+		echo "SELinux detected, installing policies..."
+		sudo cp -rvf mm_FccUnlock.cil /opt/fcc_lenovo
+		sudo cp -rvf mm_dmidecode.cil /opt/fcc_lenovo
+		sudo cp -rvf mm_sh.cil /opt/fcc_lenovo
+		sudo semodule -i /opt/fcc_lenovo/*.cil
+	else
+		echo "SELinux not detected, skipping policy installation"
+	fi
 
 else
     echo "No need to copy files"
